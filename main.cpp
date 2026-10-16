@@ -25,17 +25,17 @@
 #include <WiFiClientSecure.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
-#include "hardware/watchdog.h"
+//#include "hardware/watchdog.h"
 
 // ---- config ----
 // PLAYER_NUM identifies this unit; flash a unique value per costume.
 // All input pins use INPUT_PULLUP, so "low" = switch closed to GND.
 #define PLAYER_NUM     0
-#define SDA_PIN        12
-#define SCL_PIN        13
-#define DEBUG_PIN      18  // low = debug mode (offline test colors)  | high = normal boot
-#define SWITCH_PIN     17  // low = load from flash & run             | high = download & halt
-#define WIFI_PIN       20  // low = WiFi profile 1 (Lightdance)       | high = profile 0 (EE219B)
+#define SDA_PIN        23
+#define SCL_PIN        24
+#define DEBUG_PIN      9  // low = debug mode (offline test colors)  | high = normal boot
+#define SWITCH_PIN     10  // low = load from flash & run             | high = download & halt
+#define WIFI_PIN       11  // low = WiFi profile 1 (Lightdance)       | high = profile 0 (EE219B)
 #define MAX_FRAMES     1024
 #define CHUNK_SIZE     10
 #define NUM_CHUNKS     60
@@ -115,7 +115,7 @@ void msg(const String& s, int sz = 2) {
 }
 
 [[noreturn]] void reboot() {
-    watchdog_reboot(0, 0, 0);
+    ESP.restart();
     while (1);
 }
 
@@ -277,7 +277,8 @@ int readUDP() {
 void respond(const char* m) {
     String s = deviceId + ": " + m + ": " + String(WiFi.RSSI());
     udp.beginPacket(RESPOND_TO[wifiProfile], UDP_TX_PORT);
-    udp.write(s.c_str());
+    udp.print(s.c_str());
+    //udp.write(s.c_str(),s.length());
     udp.endPacket();
 }
 
@@ -285,9 +286,7 @@ void respond(const char* m) {
 void setup() {
     Serial.begin(115200);
     while (!Serial && millis() < 3000);
-
-    Wire.setSDA(SDA_PIN);
-    Wire.setSCL(SCL_PIN);
+    Wire.setPins(SDA_PIN, SCL_PIN);
     Wire.begin();
 
     oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
